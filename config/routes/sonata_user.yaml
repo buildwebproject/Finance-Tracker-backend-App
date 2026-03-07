@@ -1,0 +1,3 @@
+sonata_user_admin_security:
+    resource: '@SonataUserBundle/Resources/config/routing/admin_security.php'
+    prefix: /admin

@@ -1,0 +1,8 @@
+sonata_admin:
+    resource: '@SonataAdminBundle/Resources/config/routing/sonata_admin.php'
+    prefix: /admin
+
+sonata_admin_crud:
+    resource: .
+    type: sonata_admin
+    prefix: /admin

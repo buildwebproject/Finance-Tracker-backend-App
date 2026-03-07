@@ -1,0 +1,7 @@
+sonata_user:
+    manager_type: orm
+    class:
+        user: App\Entity\User
+    admin:
+        user:
+            class: App\Admin\UserAdmin

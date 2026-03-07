@@ -1,0 +1,32 @@
+form.group_social_auth: Social Authentication
+
+form.label_auth_provider: Auth Provider
+form.label_google_subject: Google Subject
+form.label_google_email: Google Email
+form.label_google_name: Google Name
+form.label_google_picture_url: Google Picture URL
+form.label_google_email_verified: Google Email Verified
+form.label_twilio_phone_number: Twilio Phone Number
+form.label_twilio_channel: Twilio Channel
+form.label_last_social_login_at: Last Social Login At
+form.label_full_name: Full Name
+list.label_auth_provider: Auth Provider
+list.label_google_email: Google Email
+list.label_twilio_phone_number: Twilio Phone Number
+list.label_last_social_login_at: Last Social Login At
+list.label_full_name: Full Name
+
+filter.label_auth_provider: Auth Provider
+filter.label_google_subject: Google Subject
+filter.label_google_email: Google Email
+filter.label_twilio_phone_number: Twilio Phone Number
+
+show.label_auth_provider: Auth Provider
+show.label_google_subject: Google Subject
+show.label_google_email: Google Email
+show.label_google_name: Google Name
+show.label_google_picture_url: Google Picture URL
+show.label_google_email_verified: Google Email Verified
+show.label_twilio_phone_number: Twilio Phone Number
+show.label_twilio_channel: Twilio Channel
+show.label_last_social_login_at: Last Social Login At
