@@ -7,7 +7,11 @@
         "php": ">=8.2",
         "ext-ctype": "*",
         "ext-iconv": "*",
+        "api-platform/doctrine-orm": "^4.2",
         "api-platform/symfony": "^4.2",
+        "doctrine/doctrine-migrations-bundle": "^3.7",
+        "doctrine/migrations": "^3.9",
+        "giggsey/libphonenumber-for-php": "^9.0",
         "sonata-project/admin-bundle": "^4.42",
         "sonata-project/doctrine-orm-admin-bundle": "^4.21",
         "sonata-project/user-bundle": "^5.19",
@@ -15,9 +19,11 @@
         "symfony/dotenv": "7.4.*",
         "symfony/flex": "^2",
         "symfony/framework-bundle": "7.4.*",
+        "symfony/intl": "7.4.*",
         "symfony/runtime": "7.4.*",
         "symfony/security-acl": "^3.4",
-        "symfony/yaml": "7.4.*"
+        "symfony/yaml": "7.4.*",
+        "vich/uploader-bundle": "^2.9"
     },
     "config": {
         "allow-plugins": {

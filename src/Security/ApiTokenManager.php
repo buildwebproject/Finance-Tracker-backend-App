@@ -36,16 +36,7 @@ final class ApiTokenManager
 
     public function getUserIdentifierFromToken(string $accessToken): string
     {
-        [$encodedPayload, $encodedSignature] = $this->splitToken($accessToken);
-        $this->assertSignature($encodedPayload, $encodedSignature);
-
-        $payload = json_decode($this->base64UrlDecode($encodedPayload), true, 512, \JSON_THROW_ON_ERROR);
-        if (!\is_array($payload)) {
-            throw new \InvalidArgumentException('Token payload is invalid.');
-        }
-
-        $subject = $payload['sub'] ?? null;
-        $expiresAt = $payload['exp'] ?? null;
+        ['sub' => $subject, 'exp' => $expiresAt] = $this->getVerifiedPayload($accessToken);
 
         if (!\is_string($subject) || '' === $subject) {
             throw new \InvalidArgumentException('Token subject is missing.');
@@ -56,6 +47,16 @@ final class ApiTokenManager
         }
 
         return $subject;
+    }
+
+    public function getExpiresAtFromToken(string $accessToken): int
+    {
+        ['exp' => $expiresAt] = $this->getVerifiedPayload($accessToken);
+        if (!\is_int($expiresAt)) {
+            throw new \InvalidArgumentException('Token expiry is invalid.');
+        }
+
+        return $expiresAt;
     }
 
     /**
@@ -77,6 +78,25 @@ final class ApiTokenManager
         if (!hash_equals($expected, $encodedSignature)) {
             throw new \InvalidArgumentException('Token signature is invalid.');
         }
+    }
+
+    /**
+     * @return array{sub: mixed, exp: mixed}
+     */
+    private function getVerifiedPayload(string $accessToken): array
+    {
+        [$encodedPayload, $encodedSignature] = $this->splitToken($accessToken);
+        $this->assertSignature($encodedPayload, $encodedSignature);
+
+        $payload = json_decode($this->base64UrlDecode($encodedPayload), true, 512, \JSON_THROW_ON_ERROR);
+        if (!\is_array($payload)) {
+            throw new \InvalidArgumentException('Token payload is invalid.');
+        }
+
+        return [
+            'sub' => $payload['sub'] ?? null,
+            'exp' => $payload['exp'] ?? null,
+        ];
     }
 
     private function base64UrlEncode(string $value): string

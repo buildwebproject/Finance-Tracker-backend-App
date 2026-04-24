@@ -12,6 +12,9 @@ use Sonata\AdminBundle\Form\FormMapper;
 use Sonata\AdminBundle\Show\ShowMapper;
 use Sonata\UserBundle\Admin\Model\UserAdmin as BaseUserAdmin;
 use Sonata\UserBundle\Form\Type\RolesMatrixType;
+use Symfony\Component\Form\Extension\Core\Type\ChoiceType;
+use Symfony\Component\Form\Extension\Core\Type\DateType;
+use Symfony\Component\Form\Extension\Core\Type\TextareaType;
 use Symfony\Component\Form\Extension\Core\Type\PasswordType;
 
 final class UserAdmin extends BaseUserAdmin
@@ -23,6 +26,8 @@ final class UserAdmin extends BaseUserAdmin
             ->add('fullName')
             ->add('email')
             ->add('authProvider')
+            ->add('dateOfBirth')
+            ->add('gender')
             ->add('googleEmail')
             ->add('twilioPhoneNumber')
             ->add('lastSocialLoginAt')
@@ -52,6 +57,9 @@ final class UserAdmin extends BaseUserAdmin
             ->add('fullName')
             ->add('email')
             ->add('authProvider')
+            ->add('dateOfBirth')
+            ->add('gender')
+            ->add('profile')
             ->add('googleSubject')
             ->add('googleEmail')
             ->add('twilioPhoneNumber');
@@ -64,6 +72,9 @@ final class UserAdmin extends BaseUserAdmin
             ->add('fullName')
             ->add('email')
             ->add('authProvider')
+            ->add('dateOfBirth')
+            ->add('gender')
+            ->add('profile')
             ->add('googleSubject')
             ->add('googleEmail')
             ->add('googleName')
@@ -87,6 +98,22 @@ final class UserAdmin extends BaseUserAdmin
                 ->add('username')
                 ->add('fullName', null, ['required' => false])
                 ->add('email', null, ['required' => $emailRequired])
+                ->add('dateOfBirth', DateType::class, [
+                    'required' => false,
+                    'widget' => 'single_text',
+                ])
+                ->add('gender', ChoiceType::class, [
+                    'required' => false,
+                    'choices' => [
+                        'Male' => 'male',
+                        'Female' => 'female',
+                        'Other' => 'other',
+                    ],
+                    'placeholder' => 'Select gender',
+                ])
+                ->add('profile', TextareaType::class, [
+                    'required' => false,
+                ])
                 ->add('plainPassword', PasswordType::class, [
                     'required' => (!$this->hasSubject() || null === $this->getSubject()->getId()),
                 ])

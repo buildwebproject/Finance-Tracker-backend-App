@@ -23,6 +23,15 @@ All other `/api/*` endpoints require:
 
 `Authorization: Bearer <access_token>`
 
+## Authenticated Profile/Session Endpoints
+
+These endpoints require Bearer token:
+
+- `GET /api/auth/me`
+- `PUT /api/auth/profile`
+- `PATCH /api/auth/profile`
+- `POST /api/auth/logout`
+
 ## 1) Google Login
 
 ### Endpoint
@@ -57,7 +66,10 @@ All other `/api/*` endpoints require:
     "google_email_verified": true,
     "twilio_phone_number": null,
     "twilio_channel": null,
-    "last_social_login_at": "2026-03-06T09:45:00+00:00"
+    "last_social_login_at": "2026-03-06T09:45:00+00:00",
+    "date_of_birth": "1995-08-15",
+    "gender": "male",
+    "profile": "Senior product designer and investor."
   }
 }
 ```
@@ -204,6 +216,35 @@ class AuthApi {
     );
     return Map<String, dynamic>.from(res.data as Map);
   }
+
+  Future<Map<String, dynamic>> updateProfile({
+    required String email,
+    required String fullName,
+    String? dateOfBirth,
+    String? gender,
+    String? profile,
+  }) async {
+    final res = await _dio.put(
+      '/api/auth/profile',
+      data: {
+        'email': email,
+        'full_name': fullName,
+        'date_of_birth': dateOfBirth,
+        'gender': gender,
+        'profile': profile,
+      },
+    );
+    return Map<String, dynamic>.from(res.data as Map);
+  }
+
+  Future<Map<String, dynamic>> me() async {
+    final res = await _dio.get('/api/auth/me');
+    return Map<String, dynamic>.from(res.data as Map);
+  }
+
+  Future<void> logout() async {
+    await _dio.post('/api/auth/logout');
+  }
 }
 ```
 
@@ -221,6 +262,104 @@ For protected APIs after login:
 ```dart
 dio.options.headers['Authorization'] = 'Bearer $accessToken';
 ```
+
+## 5) Get Current User (`me`)
+
+### Endpoint
+
+`GET /api/auth/me`
+
+### Success response (`200`)
+
+```json
+{
+  "user": {
+    "id": 1,
+    "identifier": "dev.patel@example.com",
+    "roles": ["ROLE_USER"],
+    "full_name": "Dev Patel",
+    "email": "dev.patel@example.com",
+    "auth_provider": "google",
+    "date_of_birth": "1995-08-15",
+    "gender": "male",
+    "profile": "Senior product designer and investor."
+  }
+}
+```
+
+### Common errors
+
+- `401` invalid/expired/revoked token
+
+## 6) Update Profile (Email + Full Name)
+
+### Endpoint
+
+`PUT /api/auth/profile` (or `PATCH /api/auth/profile`)
+
+### Request body
+
+```json
+{
+  "email": "dev.patel@example.com",
+  "full_name": "Dev Patel",
+  "date_of_birth": "1995-08-15",
+  "gender": "male",
+  "profile": "Senior product designer and investor."
+}
+```
+
+### Success response (`200`)
+
+```json
+{
+  "message": "Profile updated successfully.",
+  "user": {
+    "id": 1,
+    "identifier": "dev.patel@example.com",
+    "roles": ["ROLE_USER"],
+    "full_name": "Dev Patel",
+    "email": "dev.patel@example.com",
+    "auth_provider": "google",
+    "date_of_birth": "1995-08-15",
+    "gender": "male",
+    "profile": "Senior product designer and investor."
+  }
+}
+```
+
+### Common errors
+
+- `400` `email is required and must be valid.`
+- `400` `full_name is required and must be between 2 and 255 characters.`
+- `400` `date_of_birth must be a valid date in YYYY-MM-DD format.`
+- `400` `gender must be one of: male, female, other.`
+- `400` `profile must be a valid text value up to 5000 characters.`
+- `409` `email is already in use.`
+- `401` invalid/expired token
+
+## 7) Logout
+
+### Endpoint
+
+`POST /api/auth/logout`
+
+### Request body
+
+No request body required.
+
+### Success response (`200`)
+
+```json
+{
+  "message": "Logged out successfully."
+}
+```
+
+### Notes
+
+- Current access token is revoked immediately on backend.
+- After logout, same token cannot be used for protected APIs.
 
 ## Flutter Google Sign-In Hint
 
@@ -246,5 +385,8 @@ Backend stores/updates these fields for social auth:
 - `twilioPhoneNumber`
 - `twilioChannel`
 - `lastSocialLoginAt`
+- `dateOfBirth`
+- `gender`
+- `profile`
 
 This allows you to show provider-specific profile info in Flutter.

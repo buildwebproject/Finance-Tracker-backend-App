@@ -19,5 +19,139 @@ services:
     App\:
         resource: '../src/'
 
+    App\Admin\CountryAdmin:
+        arguments:
+            $code: 'app.admin.country'
+            $class: App\Entity\Country
+            $baseControllerName: Sonata\AdminBundle\Controller\CRUDController
+        tags:
+            - {
+                  name: sonata.admin,
+                  model_class: App\Entity\Country,
+                  manager_type: orm,
+                  label: country.menu.countries,
+                  group: country.menu.group,
+                  icon: '<i class="fa fa-globe"></i>',
+                  label_catalogue: messages,
+              }
+        calls:
+            - [setTranslationDomain, ['messages']]
+
+    App\Admin\UserSecuritySettingsAdmin:
+        arguments:
+            $code: 'app.admin.user_security_settings'
+            $class: App\Entity\UserSecuritySettings
+            $baseControllerName: Sonata\AdminBundle\Controller\CRUDController
+        tags:
+            - {
+                  name: sonata.admin,
+                  model_class: App\Entity\UserSecuritySettings,
+                  manager_type: orm,
+                  label: security_settings.menu.settings,
+                  group: security.menu.group,
+                  icon: '<i class="fa fa-lock"></i>',
+                  label_catalogue: messages,
+              }
+        calls:
+            - [setTranslationDomain, ['messages']]
+
+    App\Admin\UserSecuritySettingsLogAdmin:
+        arguments:
+            $code: 'app.admin.user_security_settings_log'
+            $class: App\Entity\UserSecuritySettingsLog
+            $baseControllerName: Sonata\AdminBundle\Controller\CRUDController
+        tags:
+            - {
+                  name: sonata.admin,
+                  model_class: App\Entity\UserSecuritySettingsLog,
+                  manager_type: orm,
+                  label: security_log.menu.logs,
+                  group: security.menu.group,
+                  icon: '<i class="fa fa-shield"></i>',
+                  label_catalogue: messages,
+              }
+        calls:
+            - [setTranslationDomain, ['messages']]
+
+    App\Admin\WalletAdmin:
+        arguments:
+            $code: 'app.admin.wallet'
+            $class: App\Entity\Wallet
+            $baseControllerName: Sonata\AdminBundle\Controller\CRUDController
+        tags:
+            - {
+                  name: sonata.admin,
+                  model_class: App\Entity\Wallet,
+                  manager_type: orm,
+                  label: finance_wallet.menu.wallets,
+                  group: finance.menu.group,
+                  icon: '<i class="fa fa-wallet"></i>',
+                  label_catalogue: messages,
+              }
+        calls:
+            - [setTranslationDomain, ['messages']]
+
+    App\Admin\BankAccountAdmin:
+        arguments:
+            $code: 'app.admin.bank_account'
+            $class: App\Entity\BankAccount
+            $baseControllerName: Sonata\AdminBundle\Controller\CRUDController
+        tags:
+            - {
+                  name: sonata.admin,
+                  model_class: App\Entity\BankAccount,
+                  manager_type: orm,
+                  label: finance_bank.menu.bank_accounts,
+                  group: finance.menu.group,
+                  icon: '<i class="fa fa-university"></i>',
+                  label_catalogue: messages,
+              }
+        calls:
+            - [setTranslationDomain, ['messages']]
+
+    App\Admin\FinanceCategoryAdmin:
+        arguments:
+            $code: 'app.admin.finance_category'
+            $class: App\Entity\FinanceCategory
+            $baseControllerName: Sonata\AdminBundle\Controller\CRUDController
+        tags:
+            - {
+                  name: sonata.admin,
+                  model_class: App\Entity\FinanceCategory,
+                  manager_type: orm,
+                  label: finance_category.menu.categories,
+                  group: finance.menu.group,
+                  icon: '<i class="fa fa-tags"></i>',
+                  label_catalogue: messages,
+              }
+        calls:
+            - [setTranslationDomain, ['messages']]
+
+    App\Admin\FinanceTransactionAdmin:
+        arguments:
+            $code: 'app.admin.finance_transaction'
+            $class: App\Entity\FinanceTransaction
+            $baseControllerName: Sonata\AdminBundle\Controller\CRUDController
+        tags:
+            - {
+                  name: sonata.admin,
+                  model_class: App\Entity\FinanceTransaction,
+                  manager_type: orm,
+                  label: finance_transaction.menu.transactions,
+                  group: finance.menu.group,
+                  icon: '<i class="fa fa-exchange-alt"></i>',
+                  label_catalogue: messages,
+              }
+        calls:
+            - [setTranslationDomain, ['messages']]
+
+    App\EventSubscriber\ApiDataCacheInvalidationSubscriber:
+        tags:
+            - { name: doctrine.event_subscriber, connection: default }
+
+    App\Admin\Extension\UserAdminCurrencyExtension:
+        tags:
+            - { name: sonata.admin.extension, target: sonata.user.admin.user }
+
     # add more service definitions when explicit configuration is needed
     # please note that last definitions always *replace* previous ones

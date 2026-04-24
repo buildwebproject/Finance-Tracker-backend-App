@@ -1,4 +1,6 @@
 form.group_social_auth: Social Authentication
+form.group_users: Users
+show.group_users: Users
 
 form.label_auth_provider: Auth Provider
 form.label_google_subject: Google Subject

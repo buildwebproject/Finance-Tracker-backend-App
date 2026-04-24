@@ -4,6 +4,7 @@ namespace App\Controller\Api;
 
 use App\Entity\User;
 use App\Security\ApiTokenManager;
+use App\Security\ApiTokenRevocationStore;
 use App\Security\OAuth\GoogleIdTokenVerifier;
 use App\Security\Otp\TwilioVerifyClient;
 use Sonata\UserBundle\Model\UserInterface as SonataUserInterface;
@@ -13,6 +14,7 @@ use Symfony\Component\DependencyInjection\Attribute\Autowire;
 use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
+use Symfony\Component\Intl\Currencies;
 use Symfony\Component\Routing\Attribute\Route;
 use Symfony\Component\Security\Core\User\UserInterface as SymfonyUserInterface;
 
@@ -23,6 +25,7 @@ final class AuthController extends AbstractController
         #[Autowire(service: 'sonata.user.manager.user')]
         private readonly UserManagerInterface $userManager,
         private readonly ApiTokenManager $apiTokenManager,
+        private readonly ApiTokenRevocationStore $apiTokenRevocationStore,
         private readonly GoogleIdTokenVerifier $googleIdTokenVerifier,
         private readonly TwilioVerifyClient $twilioVerifyClient,
     ) {
@@ -116,6 +119,144 @@ final class AuthController extends AbstractController
         }
     }
 
+    #[Route('/me', name: 'api_auth_me', methods: ['GET'])]
+    public function me(): JsonResponse
+    {
+        $authenticatedUser = $this->getUser();
+        if (!$authenticatedUser instanceof SymfonyUserInterface) {
+            return $this->json(['message' => 'Authenticated user is invalid.'], Response::HTTP_UNAUTHORIZED);
+        }
+
+        return $this->json([
+            'user' => $this->buildUserPayload($authenticatedUser),
+        ]);
+    }
+
+    #[Route('/profile', name: 'api_auth_profile_update', methods: ['PUT', 'PATCH'])]
+    public function updateProfile(Request $request): JsonResponse
+    {
+        $authenticatedUser = $this->getUser();
+        if (!$authenticatedUser instanceof User) {
+            return $this->json(['message' => 'Authenticated user is invalid.'], Response::HTTP_UNAUTHORIZED);
+        }
+
+        try {
+            $payload = $this->getJsonPayload($request);
+
+            $email = $this->normalizeEmail($payload['email'] ?? null);
+            if (null === $email) {
+                return $this->json(['message' => 'email is required and must be valid.'], Response::HTTP_BAD_REQUEST);
+            }
+
+            $fullName = $this->normalizeRequiredFullName($payload['full_name'] ?? null);
+            if (null === $fullName) {
+                return $this->json(['message' => 'full_name is required and must be between 2 and 255 characters.'], Response::HTTP_BAD_REQUEST);
+            }
+
+            $existingUser = $this->userManager->findUserByEmail($email);
+            if (null !== $existingUser && $existingUser !== $authenticatedUser) {
+                return $this->json(['message' => 'email is already in use.'], Response::HTTP_CONFLICT);
+            }
+
+            $authenticatedUser->setEmail($email);
+            $authenticatedUser->setFullName($fullName);
+
+            if (array_key_exists('preferred_currency_code', $payload)) {
+                $currencyCode = $this->normalizePreferredCurrencyCode($payload['preferred_currency_code'] ?? null);
+                if (null !== $payload['preferred_currency_code'] && null === $currencyCode) {
+                    return $this->json(['message' => 'preferred_currency_code must be a valid ISO 4217 code (example: USD).'], Response::HTTP_BAD_REQUEST);
+                }
+
+                $authenticatedUser->setPreferredCurrencyCode($currencyCode);
+            }
+
+            if (array_key_exists('date_of_birth', $payload)) {
+                $dateOfBirth = $this->normalizeDateOfBirth($payload['date_of_birth'] ?? null);
+                if (null !== $payload['date_of_birth'] && null === $dateOfBirth) {
+                    return $this->json(['message' => 'date_of_birth must be a valid date in YYYY-MM-DD format.'], Response::HTTP_BAD_REQUEST);
+                }
+
+                $authenticatedUser->setDateOfBirth($dateOfBirth);
+            }
+
+            if (array_key_exists('gender', $payload)) {
+                $gender = $this->normalizeGender($payload['gender'] ?? null);
+                if (null !== $payload['gender'] && null === $gender) {
+                    return $this->json(['message' => 'gender must be one of: male, female, other.'], Response::HTTP_BAD_REQUEST);
+                }
+
+                $authenticatedUser->setGender($gender);
+            }
+
+            if (array_key_exists('profile', $payload)) {
+                $profile = $this->normalizeProfile($payload['profile'] ?? null);
+                if (null !== $payload['profile'] && null === $profile) {
+                    return $this->json(['message' => 'profile must be a valid text value up to 5000 characters.'], Response::HTTP_BAD_REQUEST);
+                }
+
+                $authenticatedUser->setProfile($profile);
+            }
+
+            $this->userManager->save($authenticatedUser);
+
+            return $this->json([
+                'message' => 'Profile updated successfully.',
+                'user' => $this->buildUserPayload($authenticatedUser),
+            ]);
+        } catch (\InvalidArgumentException $exception) {
+            return $this->json(['message' => $exception->getMessage()], Response::HTTP_BAD_REQUEST);
+        }
+    }
+
+    #[Route('/preferences/currency', name: 'api_auth_currency_update', methods: ['PUT', 'PATCH'])]
+    public function updatePreferredCurrency(Request $request): JsonResponse
+    {
+        $authenticatedUser = $this->getUser();
+        if (!$authenticatedUser instanceof User) {
+            return $this->json(['message' => 'Authenticated user is invalid.'], Response::HTTP_UNAUTHORIZED);
+        }
+
+        try {
+            $payload = $this->getJsonPayload($request);
+            if (!array_key_exists('preferred_currency_code', $payload)) {
+                return $this->json(['message' => 'preferred_currency_code is required.'], Response::HTTP_BAD_REQUEST);
+            }
+
+            $currencyCode = $this->normalizePreferredCurrencyCode($payload['preferred_currency_code']);
+            if (null !== $payload['preferred_currency_code'] && null === $currencyCode) {
+                return $this->json(['message' => 'preferred_currency_code must be a valid ISO 4217 code (example: USD).'], Response::HTTP_BAD_REQUEST);
+            }
+
+            $authenticatedUser->setPreferredCurrencyCode($currencyCode);
+            $this->userManager->save($authenticatedUser);
+
+            return $this->json([
+                'message' => 'Preferred currency updated successfully.',
+                'user' => $this->buildUserPayload($authenticatedUser),
+            ]);
+        } catch (\InvalidArgumentException $exception) {
+            return $this->json(['message' => $exception->getMessage()], Response::HTTP_BAD_REQUEST);
+        }
+    }
+
+    #[Route('/logout', name: 'api_auth_logout', methods: ['POST'])]
+    public function logout(Request $request): JsonResponse
+    {
+        $accessToken = $this->extractBearerToken($request);
+        if (null === $accessToken) {
+            return $this->json(['message' => 'Authorization Bearer token is required.'], Response::HTTP_BAD_REQUEST);
+        }
+
+        try {
+            $expiresAt = $this->apiTokenManager->getExpiresAtFromToken($accessToken);
+            $this->apiTokenRevocationStore->revoke($accessToken, $expiresAt);
+
+            return $this->json(['message' => 'Logged out successfully.']);
+        } catch (\InvalidArgumentException $exception) {
+            return $this->json(['message' => 'Invalid API token.'], Response::HTTP_UNAUTHORIZED);
+        }
+    }
+
     /**
      * @return array<string, mixed>
      */
@@ -156,6 +297,135 @@ final class AuthController extends AbstractController
         }
 
         return $value;
+    }
+
+    private function normalizeEmail(mixed $email): ?string
+    {
+        if (!\is_scalar($email)) {
+            return null;
+        }
+
+        $value = trim((string) $email);
+        if ('' === $value) {
+            return null;
+        }
+
+        if (false === filter_var($value, \FILTER_VALIDATE_EMAIL)) {
+            return null;
+        }
+
+        return strtolower($value);
+    }
+
+    private function normalizeRequiredFullName(mixed $fullName): ?string
+    {
+        if (!\is_scalar($fullName)) {
+            return null;
+        }
+
+        $value = trim((string) $fullName);
+        $length = mb_strlen($value);
+        if ($length < 2 || $length > 255) {
+            return null;
+        }
+
+        return $value;
+    }
+
+    private function normalizePreferredCurrencyCode(mixed $currencyCode): ?string
+    {
+        if (null === $currencyCode) {
+            return null;
+        }
+
+        if (!\is_scalar($currencyCode)) {
+            return null;
+        }
+
+        $value = strtoupper(trim((string) $currencyCode));
+        if ('' === $value) {
+            return null;
+        }
+
+        if (1 !== preg_match('/^[A-Z]{3}$/', $value)) {
+            return null;
+        }
+
+        return Currencies::exists($value) ? $value : null;
+    }
+
+    private function normalizeDateOfBirth(mixed $dateOfBirth): ?\DateTimeImmutable
+    {
+        if (null === $dateOfBirth) {
+            return null;
+        }
+
+        if (!\is_scalar($dateOfBirth)) {
+            return null;
+        }
+
+        $value = trim((string) $dateOfBirth);
+        if ('' === $value) {
+            return null;
+        }
+
+        $parsed = \DateTimeImmutable::createFromFormat('!Y-m-d', $value);
+        $errors = \DateTimeImmutable::getLastErrors();
+        if (false === $parsed || false !== $errors && (($errors['warning_count'] ?? 0) > 0 || ($errors['error_count'] ?? 0) > 0)) {
+            return null;
+        }
+
+        return $parsed;
+    }
+
+    private function normalizeGender(mixed $gender): ?string
+    {
+        if (null === $gender) {
+            return null;
+        }
+
+        if (!\is_scalar($gender)) {
+            return null;
+        }
+
+        $value = strtolower(trim((string) $gender));
+        if ('' === $value) {
+            return null;
+        }
+
+        return \in_array($value, ['male', 'female', 'other'], true) ? $value : null;
+    }
+
+    private function normalizeProfile(mixed $profile): ?string
+    {
+        if (null === $profile) {
+            return null;
+        }
+
+        if (!\is_scalar($profile)) {
+            return null;
+        }
+
+        $value = trim((string) $profile);
+        if ('' === $value || mb_strlen($value) > 5000) {
+            return null;
+        }
+
+        return $value;
+    }
+
+    private function extractBearerToken(Request $request): ?string
+    {
+        $header = $request->headers->get('Authorization');
+        if (!\is_string($header) || '' === trim($header)) {
+            return null;
+        }
+
+        if (1 !== preg_match('/^Bearer\s+(.+)$/i', trim($header), $matches)) {
+            return null;
+        }
+
+        return trim($matches[1]);
     }
 
     /**
@@ -341,6 +611,7 @@ final class AuthController extends AbstractController
         }
 
         $payload['full_name'] = $user->getFullName();
+        $payload['email'] = $user->getEmail();
         $payload['auth_provider'] = $user->getAuthProvider();
         $payload['google_subject'] = $user->getGoogleSubject();
         $payload['google_email'] = $user->getGoogleEmail();
@@ -350,6 +621,10 @@ final class AuthController extends AbstractController
         $payload['twilio_phone_number'] = $user->getTwilioPhoneNumber();
         $payload['twilio_channel'] = $user->getTwilioChannel();
         $payload['last_social_login_at'] = $user->getLastSocialLoginAt()?->format(\DateTimeInterface::ATOM);
+        $payload['preferred_currency_code'] = $user->getPreferredCurrencyCode();
+        $payload['date_of_birth'] = $user->getDateOfBirth()?->format('Y-m-d');
+        $payload['gender'] = $user->getGender();
+        $payload['profile'] = $user->getProfile();
 
         return $payload;
     }

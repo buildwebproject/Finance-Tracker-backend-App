@@ -57,6 +57,18 @@ class User extends BaseUser3
     #[ORM\Column(type: 'datetime_immutable', nullable: true)]
     private ?\DateTimeImmutable $lastSocialLoginAt = null;
 
+    #[ORM\Column(type: 'string', length: 3, nullable: true)]
+    private ?string $preferredCurrencyCode = null;
+
+    #[ORM\Column(type: 'date_immutable', nullable: true)]
+    private ?\DateTimeImmutable $dateOfBirth = null;
+
+    #[ORM\Column(type: 'string', length: 20, nullable: true)]
+    private ?string $gender = null;
+
+    #[ORM\Column(type: 'text', nullable: true)]
+    private ?string $profile = null;
+
     public function getFullName(): ?string
     {
         return $this->fullName;
@@ -187,6 +199,57 @@ class User extends BaseUser3
     public function setLastSocialLoginAt(?\DateTimeImmutable $lastSocialLoginAt): self
     {
         $this->lastSocialLoginAt = $lastSocialLoginAt;
+
+        return $this;
+    }
+
+    public function getPreferredCurrencyCode(): ?string
+    {
+        return $this->preferredCurrencyCode;
+    }
+
+    public function setPreferredCurrencyCode(?string $preferredCurrencyCode): self
+    {
+        $preferredCurrencyCode = null === $preferredCurrencyCode ? null : strtoupper(trim($preferredCurrencyCode));
+        $this->preferredCurrencyCode = '' === $preferredCurrencyCode ? null : $preferredCurrencyCode;
+
+        return $this;
+    }
+
+    public function getDateOfBirth(): ?\DateTimeImmutable
+    {
+        return $this->dateOfBirth;
+    }
+
+    public function setDateOfBirth(?\DateTimeImmutable $dateOfBirth): self
+    {
+        $this->dateOfBirth = $dateOfBirth;
+
+        return $this;
+    }
+
+    public function getGender(): ?string
+    {
+        return $this->gender;
+    }
+
+    public function setGender(?string $gender): self
+    {
+        $gender = null === $gender ? null : strtolower(trim($gender));
+        $this->gender = '' === $gender ? null : $gender;
+
+        return $this;
+    }
+
+    public function getProfile(): ?string
+    {
+        return $this->profile;
+    }
+
+    public function setProfile(?string $profile): self
+    {
+        $profile = null === $profile ? null : trim($profile);
+        $this->profile = '' === $profile ? null : $profile;
 
         return $this;
     }

@@ -1,0 +1,122 @@
+country:
+    menu:
+        group: Country
+        countries: Countries
+    fields:
+        name: Name
+        iso2: ISO2 Code
+        iso3: ISO3 Code
+        dial_code: Dial Code
+        flag: Flag
+        currency_code: Currency Code
+        currency_icon: Currency Icon
+        is_active: Active
+        created_at: Created At
+    filters:
+        search: Search
+    help:
+        iso2: "Use an uppercase 2-letter ISO code (example: IN)."
+        dial_code: "Use E.164 country calling code format (example: +91)."
+        flag: "Auto-generated from ISO2 code."
+        currency_code: "Auto-generated ISO 4217 currency code (example: USD)."
+        currency_icon: "Auto-generated currency symbol/icon (example: $)."
+    iso2_code:
+        invalid: ISO2 code must be exactly 2 uppercase letters.
+        unique: This ISO2 code already exists.
+    iso3_code:
+        invalid: ISO3 code must be exactly 3 uppercase letters.
+        unique: This ISO3 code already exists.
+    dial_code:
+        invalid: "Dial code must be in +<digits> format (example: +91)."
+    currency_code:
+        invalid: Currency code must be exactly 3 uppercase letters.
+
+security:
+    menu:
+        group: Security
+
+security_settings:
+    menu:
+        settings: Security Settings
+    fields:
+        user: User
+        app_lock_enabled: App Lock Enabled
+        biometric_enabled: Biometric Enabled
+        has_mpin: Has MPIN
+        mpin_updated_at: MPIN Updated At
+        created_at: Created At
+        updated_at: Updated At
+
+security_log:
+    menu:
+        logs: Security Logs
+    fields:
+        user: User
+        action: Action
+        ip_address: IP Address
+        details: Details
+        created_at: Created At
+
+finance:
+    menu:
+        group: Finance
+
+finance_category:
+    menu:
+        categories: Categories
+    fields:
+        id: ID
+        name: Name
+        icon: Icon
+        is_active: Active
+        created_at: Created At
+        updated_at: Updated At
+
+finance_wallet:
+    menu:
+        wallets: Wallets
+    fields:
+        id: ID
+        user: User
+        name: Name
+        starting_balance: Starting Balance
+        current_balance: Current Balance
+        color_value: Color Value
+        icon_code_point: Icon Code Point
+        created_at: Created At
+        updated_at: Updated At
+
+finance_bank:
+    menu:
+        bank_accounts: Bank Accounts
+    fields:
+        id: ID
+        user: User
+        bank_name: Bank Name
+        nickname: Nickname
+        starting_balance: Starting Balance
+        current_balance: Current Balance
+        is_default: Is Default
+        created_at: Created At
+        updated_at: Updated At
+
+finance_transaction:
+    menu:
+        transactions: Transactions
+    fields:
+        id: ID
+        user: User
+        amount: Amount
+        is_income: Is Income
+        payment_type: Payment Type
+        category_ref: Category Ref
+        category: Category
+        wallet: Wallet
+        bank_account: Bank Account
+        note: Note
+        occurred_at: Occurred At
+        is_system_generated: Is System Generated
+        source_type: Source Type
+        source_id: Source ID
+        created_at: Created At
+        updated_at: Updated At

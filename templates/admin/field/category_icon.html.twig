@@ -1,0 +1,15 @@
+{% extends '@SonataAdmin/CRUD/base_list_field.html.twig' %}
+
+{% block field %}
+    {% set icon = object.iconName ?? null %}
+
+    {% if icon %}
+        <img
+            src="{{ asset('uploads/categories/' ~ icon) }}"
+            alt="{{ object.name|default('category icon') }}"
+            style="width:28px;height:28px;object-fit:cover;border-radius:6px;border:1px solid #d2d6de;"
+        />
+    {% else %}
+        <span style="color:#999;">-</span>
+    {% endif %}
+{% endblock %}

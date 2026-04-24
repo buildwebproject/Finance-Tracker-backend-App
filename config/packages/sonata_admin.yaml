@@ -1,5 +1,37 @@
 sonata_admin:
     title: 'Finance Tracker Admin'
     dashboard:
+        groups:
+            country:
+                label: country.menu.group
+                label_catalogue: messages
+                icon: '<i class="fa fa-globe"></i>'
+                items:
+                    - App\Admin\CountryAdmin
+            users:
+                label: Users
+                icon: '<i class="fa fa-users"></i>'
+                items:
+                    - sonata.user.admin.user
+            security:
+                label: security.menu.group
+                label_catalogue: messages
+                icon: '<i class="fa fa-lock"></i>'
+                items:
+                    - App\Admin\UserSecuritySettingsAdmin
+                    - App\Admin\UserSecuritySettingsLogAdmin
+            finance:
+                label: finance.menu.group
+                label_catalogue: messages
+                icon: '<i class="fa fa-money-bill-wave"></i>'
+                items:
+                    - App\Admin\WalletAdmin
+                    - App\Admin\BankAccountAdmin
+                    - App\Admin\FinanceCategoryAdmin
+                    - App\Admin\FinanceTransactionAdmin
         blocks:
-            - { type: sonata.admin.block.admin_list, position: left }
+            -
+                type: sonata.admin.block.admin_list
+                position: left
+                settings:
+                    title: '<i class="fa fa-globe"></i> Admin Modules'
